@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by yaco on 3/22/14.
@@ -30,8 +31,7 @@ public class AttitudeService extends Service implements SensorEventListener {
     float pt=0;
     float rl=0;
     int avg=0;
-    static int i=0;
-    boolean sendData = false;
+    LinkedBlockingQueue<float[]> queue = new LinkedBlockingQueue<float[]>(4);
 
     @Override
     public void onCreate() {
@@ -49,12 +49,8 @@ public class AttitudeService extends Service implements SensorEventListener {
         mSensorManager.registerListener(this, acc, SensorManager.SENSOR_STATUS_ACCURACY_HIGH);
         mSensorManager.registerListener(this, mag, SensorManager.SENSOR_STATUS_ACCURACY_HIGH);
 
-        if(i==0)
-        {
-            sendAttitudeData sendAttitudeData = new sendAttitudeData();
-            sendAttitudeData.start();
-            i=1;
-        }
+        sendAttitudeData sendAttitudeData = new sendAttitudeData();
+        sendAttitudeData.start();
 
         return startId;
     }
@@ -98,8 +94,11 @@ public class AttitudeService extends Service implements SensorEventListener {
                     az /= avg;
                     pt /= avg;
                     rl /= avg;
-                    sendData = true;
-                    while(sendData);
+                    try {
+                        queue.put(new float[]{az, pt, rl});
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     az = 0;
                     pt = 0;
                     rl = 0;
@@ -140,28 +139,29 @@ public class AttitudeService extends Service implements SensorEventListener {
             }
 
             while(true) {
-                if(sendData) {
-                    try {
-                        floatToByteArray(az, pitch);
-                        floatToByteArray(pt, tilt);
-                        floatToByteArray(rl, roll);
+                try {
+                    Log.i(TAG, "Send Started");
+                    float[] values = queue.take();
+                    Log.i(TAG, "Value Taken");
+                    floatToByteArray(values[0], pitch);
+                    floatToByteArray(values[1], tilt);
+                    floatToByteArray(values[2], roll);
 
-                        outP.setData(pitch);
-                        outT.setData(tilt);
-                        outR.setData(roll);
+                    outP.setData(pitch);
+                    outT.setData(tilt);
+                    outR.setData(roll);
 
-                        socket.send(outP);
-                        socket.send(outT);
-                        socket.send(outR);
+                    socket.send(outP);
+                    socket.send(outT);
+                    socket.send(outR);
+                    Log.i(TAG, "Sending Finished");
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (NullPointerException e) {
-                        e.printStackTrace();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    sendData = false;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
