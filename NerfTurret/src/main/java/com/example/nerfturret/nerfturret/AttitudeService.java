@@ -11,9 +11,10 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 
 /**
  * Created by yaco on 3/22/14.
@@ -24,18 +25,10 @@ public class AttitudeService extends Service implements SensorEventListener {
     private SensorManager mSensorManager;
     Sensor acc;
     Sensor mag;
-    Socket socketP = null;
-    Socket socketT = null;
-    Socket socketA = null;
-    DataOutputStream outP = null;
-    DataOutputStream outT = null;
-    DataOutputStream outA = null;
+    DatagramSocket socket = null;
     float az=0;
     float pt=0;
     float rl=0;
-    int azm=0;
-    int pan=0;
-    int tilt=0;
     int avg=0;
     static int i=0;
     boolean sendData = false;
@@ -71,10 +64,8 @@ public class AttitudeService extends Service implements SensorEventListener {
         super.onDestroy();
         mSensorManager.unregisterListener(this);
         try {
-            socketP.close();
-            socketT.close();
-            socketA.close();
-        } catch (IOException e) {
+            socket.close();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -101,20 +92,12 @@ public class AttitudeService extends Service implements SensorEventListener {
                 az += orientation[0];
                 pt += orientation[1];
                 rl += orientation[2];
-                /*az = orientation[0]*(float)(180/Math.PI);
-                pt = orientation[1]*(float)(180/Math.PI);
-                rl = orientation[2]*(float)(180/Math.PI);
-
-                azm += (int)az;
-                pan += (int)rl;
-                tilt += (int)pt;*/
                 avg++;
 
                 if(avg==3) {
                     az /= avg;
                     pt /= avg;
                     rl /= avg;
-                    //Log.i(TAG, "tilt: " + (180-tilt) + " pan: " + (azm+90));*/
                     sendData = true;
                     while(sendData);
                     az = 0;
@@ -122,29 +105,36 @@ public class AttitudeService extends Service implements SensorEventListener {
                     rl = 0;
                     avg = 0;
                 }
-                //Log.i(TAG, "SocketStatus: " + socket.isBound());
-                /*if(socket.isClosed())
-                {
-                    try {
-                        socket = new Socket("192.168.1.34", 2000);
-                        out = new DataOutputStream(socket.getOutputStream());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }*/
             }
         }
     }
 
+    private void floatToByteArray(float f, byte[] bt) {
+        int it;
+
+        it = Float.floatToIntBits(f);
+
+        for(int i=0; i<4; i++)
+            bt[i] = (byte)((it >> (8*i)) & 0xFF);
+    }
+
     public class sendAttitudeData extends Thread {
+
+        private byte[] pitch = new byte[4];
+        private byte[] tilt = new byte[4];
+        private byte[] roll = new byte[4];
+
+        DatagramPacket outP = null;
+        DatagramPacket outT = null;
+        DatagramPacket outR = null;
+
         public void run() {
             try {
-                socketP = new Socket("192.168.1.34", 2001);
-                socketT = new Socket("192.168.1.34", 2000);
-                socketA = new Socket("192.168.1.34", 2002);
-                outP = new DataOutputStream(socketP.getOutputStream());
-                outT = new DataOutputStream(socketT.getOutputStream());
-                outA = new DataOutputStream(socketA.getOutputStream());
+                outP = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.34"), 2001);
+                outT = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.34"), 2000);
+                outR = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.34"), 2002);
+
+                socket = new DatagramSocket(4000);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -152,11 +142,18 @@ public class AttitudeService extends Service implements SensorEventListener {
             while(true) {
                 if(sendData) {
                     try {
-                        outP.writeFloat(az);
-                        outT.writeFloat(pt);
-                        outA.writeFloat(rl);
-                        //outP.writeInt((azm+90));
-                        //outT.writeInt((180-tilt));
+                        floatToByteArray(az, pitch);
+                        floatToByteArray(pt, tilt);
+                        floatToByteArray(rl, roll);
+
+                        outP.setData(pitch);
+                        outT.setData(tilt);
+                        outR.setData(roll);
+
+                        socket.send(outP);
+                        socket.send(outT);
+                        socket.send(outR);
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (NullPointerException e) {
