@@ -1,5 +1,3 @@
-
-
 // WiFly server
 
 var server = require('net');
@@ -26,24 +24,57 @@ var Socket = {
 };
 
 var Cam = {
-    X:{id: 4, min:0, max:360},
-    Y:{id:2, min:60, max:280},
-    Z:{id:3, min:0, max:360},
-    shoot:{id:5, min:240, max:360}
+    X:{
+        id: 4, min:90, max:270,center:180,
+        offset:0, calibrate:10
+    },
+    Y:{
+        id:2, min:60, max:280, center:150,
+        offset:0, calibrate:10
+    },
+    Z:{
+        id:3, min:0, max:160, center:70,
+        offset:0, calibrate:10
+    },
+    shoot:{
+        id:5, min:240, max:360, center:240
+    }
 };
+for (var i in Cam){
+    Cam[i]._div = Cam[i].calibrate;
+    Cam[i]._sum = 0;
+    Cam[i].goTo = function(num, nocalibrate){
+            
+        if (this._div && !nocalibrate) {
+            console.log('CALIBRATING'.yellow());
+            this._div--;
+            this._sum += (this.center - num);
+            if (!this._div) {
+                this.offset = (this._sum / this.calibrate)|0;
+            }
+        }else
+            Servo.goTo((num+this.offset) , this);
+    };
+        
+    // Recalibrate using old offset and calibrate or specifying new values
+    Cam[i].recalibrate = function(offset, calibrate){
+        this.offset = (offset == undefined) ? this.offset : offset;
+        this.calibrate = calibrate || this.calibrate;
+        this._div = this.calibrate;
+    };
+                    
+}
 
 Servo.on('ready', function(){
-   Servo.goTo(Cam.Y.min, Cam.Y); 
-   Servo.goTo(Cam.X.min, Cam.X); 
-   Servo.goTo(180, Cam.Z); 
+    for (var i in Cam) 
+        Cam[i].goTo(Cam[i].center, true);
 });
 
 
 Socket.TIL.bind(Socket.TIL_port, function() {
     Socket.TIL.on('message', function(buf, rinfo){
         
-        Servo.goTo(  buf.readOrientation() + 70,
-                     Cam.Y  );
+        Cam.Y.goTo(  Cam.Y.max - buf.readOrientation() );
         
     });
     console.log('UDP TIL listening on ', Socket.TIL.address());
@@ -53,8 +84,7 @@ Socket.TIL.bind(Socket.TIL_port, function() {
 Socket.PAN.bind(Socket.PAN_port, function() {
     Socket.PAN.on('message', function(buf, rinfo){
         
-        Servo.goTo(  buf.readOrientation() + 90,
-                     Cam.X  );
+        Cam.X.goTo(  buf.readOrientation() );
         
     });
     console.log('UDP PAN listening on ', Socket.PAN.address());
@@ -63,8 +93,7 @@ Socket.PAN.bind(Socket.PAN_port, function() {
 Socket.AZI.bind(Socket.AZI_port, function() {
     Socket.AZI.on('message', function(buf, rinfo){
         
-        Servo.goTo(  buf.readOrientation() + 180,
-                     Cam.Z  );
+        Cam.Z.goTo(  buf.readOrientation() );
         
     });
     console.log('UDP AZI listening on ', Socket.AZI.address());
@@ -100,9 +129,9 @@ var shoot = function(){
     
     console.log('BANG! POW! PULL!');
 
-    Servo.goTo(Cam.shoot.max, Cam.shoot);
+    Cam.shoot.goTo(Cam.shoot.max);
     setTimeout(function(){
-        Servo.goTo(Cam.shoot.min, Cam.shoot); 
+        Cam.shoot.goTo(Cam.shoot.min);
     },debouce);
 };
 

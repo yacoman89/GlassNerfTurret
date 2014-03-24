@@ -45,18 +45,18 @@ _serialport.list(function (err, ports) {
 	var bLength = function(){ var l = 0; for(var i in buffers){ l+=buffers[i].length; } return l; };
         serial.on('data', function(buf){
             //console.log('Servo driver feedback: ', buf);
-	    if (Servo._readCallBack){
+	    if (_Servo._readCallBack){
 		if (buf[0] == 0xff && buf[1] == 0xff) {
 		    length = buf[3];
 		}
 		if (length <= buf.length) {
-		    Servo._readCallBack(buf);
-		    Servo._readCallBack = null;
+		    _Servo._readCallBack(buf);
+		    _Servo._readCallBack = null;
 
 		}else if(length <= bLength() + buf.length){
 		    buffers.push(buf);
-		    Servo._readCallBack(Buffer.concat(buffers));
-		    Servo._readCallBack = null;
+		    _Servo._readCallBack(Buffer.concat(buffers));
+		    _Servo._readCallBack = null;
 		    buffers = [];
 
 		}else{
@@ -65,16 +65,16 @@ _serialport.list(function (err, ports) {
 		}
 
 	    }
-	    
+
         });
         serial.on('open', function(){
             C.log('Servo connection ready'.green().bold());
-            Servo.ready = true;
-            Servo.serial = serial;
-	    for (var i in Servo.readyCallbacks)
-		Servo.readyCallbacks[i]();
-	    Servo.set(Servo.stats);
-	    console.log('SPEED:'+Servo.stats.movingSpeed);
+            _Servo.ready = true;
+            _Servo.serial = serial;
+	    for (var i in _Servo.readyCallbacks)
+		_Servo.readyCallbacks[i]();
+	    _Servo.set(_Servo.stats);
+	    console.log('SPEED:'+_Servo.stats.movingSpeed);
         });
         serial.on('error', function(){
             C.err('SERVO ERRRRRORRR');
@@ -86,7 +86,7 @@ _serialport.list(function (err, ports) {
     __connect();
 });
 
-var Servo = {
+var _Servo = {
     ready:false,
     _reading:false,
     serial:serial,
@@ -101,7 +101,7 @@ var Servo = {
      */
     _readCallBack:null,
     write: function(args, callback){
-        if (!Servo.ready) {
+        if (!_Servo.ready) {
             C.log('Servo connection not ready.'); return;
         }
         var id = args.id || 254;
@@ -118,11 +118,11 @@ var Servo = {
         var cmd = [0xff, 0xff, id, length, args._instruction || 0x3];
         cmd = cmd.concat(args.params);
         cmd.push(checksum);
-        Servo.serial.write(new Buffer(cmd), function(err, results){
-	    Servo._readCallBack = callback;
+        _Servo.serial.write(new Buffer(cmd), function(err, results){
+	    _Servo._readCallBack = callback;
             if (args.explicit) console.log('Wrote buf: ', new Buffer(cmd));
             if (err){
-		console.error('Error writing to Servo serial : ', err, Servo.serial);
+		console.error('Error writing to Servo serial : ', err, _Servo.serial);
 	    }
 
         });
@@ -156,7 +156,7 @@ var Servo = {
 	    default:
 		console.log(('Error: '+str+' is not a readable attribute.').red());
 		return;
-	        
+
 	}
 	if (typeof args == 'function') {
 	    cb = args;
@@ -178,7 +178,7 @@ var Servo = {
 
 	if (!this.readCmds.length) 
 	    return;
-	
+
 	var args = this.readCmds[ 0];
 	this.readBusy = true;
 	this.write(args, function(results){
@@ -188,9 +188,9 @@ var Servo = {
 	    fin.error = results[4] || !(results[3]);
 	    fin.result = ( (results[5] + (results[6] << 8) ) * args.scale) | 0;
 	    if (typeof args.cb == 'function') args.cb(fin);
-	    Servo.readCmds.shift();
-	    if (Servo.readCmds.length){
-		Servo.readNext();
+	    _Servo.readCmds.shift();
+	    if (_Servo.readCmds.length){
+		_Servo.readNext();
 	    }
 	});
     },
@@ -229,10 +229,10 @@ var Servo = {
     blinkLED: function(blinkInter, params){
 	params = params || {};
         //C.log('Blinking'.green(), params.id || 254);
-        Servo.write({
+        _Servo.write({
             params:[0x19, 0x1], id: params.id || 254});
         setTimeout(function(){
-            Servo.write({
+            _Servo.write({
                 params:[0x19, 0] //turn off
             });
         }, blinkInter/2);
@@ -253,7 +253,7 @@ var Servo = {
     set: function(params){
 	for (var p in params) 
 	    this.stats[p] = params[p];
-	
+
 	if (params.CWLimit) {	// range from 0 to 1023.  0 means no limit.
 	    this.write({params:[0x06,  params.CWLimit & 0xff,
 			    (params.CWLimit & 0xff00) >> 8], id:params.id });	
@@ -288,12 +288,12 @@ var _id = 2;
 process.stdin.resume();
 process.stdin.on('data', function(d){
     if (d.toString().indexOf('reset') != -1) {
-	Servo.write({params:[], _instruction:0x6}, function(err, results){
+	_Servo.write({params:[], _instruction:0x6}, function(err, results){
 	    console.log('RESET SERVO '.blue(), err, results);
 	}); return;
     }
     if (d.toString().indexOf('r') != -1) {
-	Servo.read('position',{id:_id}, function(data){
+	_Servo.read('position',{id:_id}, function(data){
 	    console.log('R1 ', data);
 	});
 
@@ -305,16 +305,17 @@ process.stdin.on('data', function(d){
 
     d = parseInt(d);
     if (isNaN(d)) return;
-    Servo.goTo(d, {id:_id, explicit:true});
+    _Servo.goTo(d, {id:_id, explicit:true});
 });
 
 var blinkInter = 1000;
-var blink =  function(){   Servo.blinkLED(blinkInter);   };
+var blink =  function(){   _Servo.blinkLED(blinkInter);   };
 
-//setInterval(function(){ Servo.readCmds = [] },250);
+//setInterval(function(){ _Servo.readCmds = [] },250);
 setInterval( blink, blinkInter);
 
-return Servo;
+
+return _Servo;
 
 })();
 

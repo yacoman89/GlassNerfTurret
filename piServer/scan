@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# you need Tekkotsu installed
+
+/usr/local/Tekkotsu/tools/dynamixel_util/dynamixel_util scan 0-253
+
