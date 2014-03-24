@@ -3,6 +3,7 @@ package com.example.nerfturret.nerfturret;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -11,9 +12,14 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.io.DataOutputStream;
+import com.google.android.glass.eye.EyeGesture;
+import com.google.android.glass.eye.EyeGestureManager;
+
 import java.io.IOException;
-import java.net.Socket;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by yaco on 3/22/14.
@@ -24,26 +30,71 @@ public class AttitudeService extends Service implements SensorEventListener {
     private SensorManager mSensorManager;
     Sensor acc;
     Sensor mag;
-    Socket socketP = null;
-    Socket socketT = null;
-    Socket socketA = null;
-    DataOutputStream outP = null;
-    DataOutputStream outT = null;
-    DataOutputStream outA = null;
+    DatagramSocket socket = null;
     float az=0;
     float pt=0;
     float rl=0;
-    int azm=0;
-    int pan=0;
-    int tilt=0;
     int avg=0;
-    static int i=0;
-    boolean sendData = false;
+    LinkedBlockingQueue<float[]> queue = new LinkedBlockingQueue<float[]>(4);
+
+    private EyeGestureManager mEyeGestureManager;
+    private EyeSender mEyeSender;
+    private EyeSender.EyeEventListener mEyeEventListener;
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.i(TAG, "onCreate");
+
+        mEyeGestureManager = EyeGestureManager.from(this);
+
+        mEyeEventListener = new EyeSender.EyeEventListener() {
+            @Override
+            public void onWink() {
+                Log.i(TAG, "Single Wink");
+            }
+
+            @Override
+            public void onDoubleBlink() {
+                Log.i(TAG, "Double Wink");
+                try {
+                    queue.put(new float[]{1});
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        mEyeSender = new EyeSender(mEyeEventListener);
+        setupReceiver();
+    }
+
+    public void setupReceiver() {
+        // Eye Events
+        mEyeGestureManager.stopDetector(EyeGesture.DOUBLE_BLINK);
+        mEyeGestureManager.stopDetector(EyeGesture.WINK);
+
+        mEyeGestureManager.enableDetectorPersistently(EyeGesture.DOUBLE_BLINK,
+                true);
+        //mEyeGestureManager.enableDetectorPersistently(EyeGesture.WINK, true);
+
+        IntentFilter eyeFilter = new IntentFilter(
+                "com.google.glass.action.EYE_GESTURE");
+        eyeFilter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
+
+        this.registerReceiver(mEyeSender, eyeFilter);
+    }
+
+    public void removeReceiver() {
+        // Eye Events
+        mEyeGestureManager.stopDetector(EyeGesture.DOUBLE_BLINK);
+        mEyeGestureManager.stopDetector(EyeGesture.WINK);
+
+        try{
+            this.unregisterReceiver(mEyeSender);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -56,12 +107,8 @@ public class AttitudeService extends Service implements SensorEventListener {
         mSensorManager.registerListener(this, acc, SensorManager.SENSOR_STATUS_ACCURACY_HIGH);
         mSensorManager.registerListener(this, mag, SensorManager.SENSOR_STATUS_ACCURACY_HIGH);
 
-        if(i==0)
-        {
-            sendAttitudeData sendAttitudeData = new sendAttitudeData();
-            sendAttitudeData.start();
-            i=1;
-        }
+        sendAttitudeData sendAttitudeData = new sendAttitudeData();
+        sendAttitudeData.start();
 
         return startId;
     }
@@ -69,12 +116,11 @@ public class AttitudeService extends Service implements SensorEventListener {
     public void onDestroy() {
         Log.i(TAG, "Service Killed");
         super.onDestroy();
+        removeReceiver();
         mSensorManager.unregisterListener(this);
         try {
-            socketP.close();
-            socketT.close();
-            socketA.close();
-        } catch (IOException e) {
+            socket.close();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -101,70 +147,91 @@ public class AttitudeService extends Service implements SensorEventListener {
                 az += orientation[0];
                 pt += orientation[1];
                 rl += orientation[2];
-                /*az = orientation[0]*(float)(180/Math.PI);
-                pt = orientation[1]*(float)(180/Math.PI);
-                rl = orientation[2]*(float)(180/Math.PI);
-
-                azm += (int)az;
-                pan += (int)rl;
-                tilt += (int)pt;*/
                 avg++;
 
                 if(avg==3) {
                     az /= avg;
                     pt /= avg;
                     rl /= avg;
-                    //Log.i(TAG, "tilt: " + (180-tilt) + " pan: " + (azm+90));*/
-                    sendData = true;
-                    while(sendData);
+                    try {
+                        queue.put(new float[]{0, az, pt, rl});
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     az = 0;
                     pt = 0;
                     rl = 0;
                     avg = 0;
                 }
-                //Log.i(TAG, "SocketStatus: " + socket.isBound());
-                /*if(socket.isClosed())
-                {
-                    try {
-                        socket = new Socket("192.168.1.34", 2000);
-                        out = new DataOutputStream(socket.getOutputStream());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }*/
             }
         }
     }
 
+    private void floatToByteArray(float f, byte[] bt) {
+        int it;
+
+        it = Float.floatToIntBits(f);
+
+        for(int i=0; i<4; i++)
+            bt[i] = (byte)((it >> (8*i)) & 0xFF);
+    }
+
     public class sendAttitudeData extends Thread {
+
+        private byte[] pitch = new byte[4];
+        private byte[] tilt = new byte[4];
+        private byte[] roll = new byte[4];
+
+        DatagramPacket outP = null;
+        DatagramPacket outT = null;
+        DatagramPacket outR = null;
+        DatagramPacket outS = null;
+
         public void run() {
             try {
-                socketP = new Socket("192.168.1.34", 2001);
-                socketT = new Socket("192.168.1.34", 2000);
-                socketA = new Socket("192.168.1.34", 2002);
-                outP = new DataOutputStream(socketP.getOutputStream());
-                outT = new DataOutputStream(socketT.getOutputStream());
-                outA = new DataOutputStream(socketA.getOutputStream());
+                outP = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.30"), 2001);
+                outT = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.30"), 2000);
+                outR = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.30"), 2002);
+                outS = new DatagramPacket(new byte[] {(byte)1},1, InetAddress.getByName("192.168.1.30"), 2003);
+
+                socket = new DatagramSocket(4000);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
             while(true) {
-                if(sendData) {
-                    try {
-                        outP.writeFloat(az);
-                        outT.writeFloat(pt);
-                        outA.writeFloat(rl);
-                        //outP.writeInt((azm+90));
-                        //outT.writeInt((180-tilt));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (NullPointerException e) {
-                        e.printStackTrace();
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                try {
+                    //Log.i(TAG, "Send Started");
+                    float[] values = queue.take();
+
+                    int flag = (int)values[0];
+
+                    switch (flag) {
+                        case 0:
+                            //Log.i(TAG, "Value Taken");
+                            floatToByteArray(values[1], pitch);
+                            floatToByteArray(values[2], tilt);
+                            floatToByteArray(values[3], roll);
+
+                            outP.setData(pitch);
+                            outT.setData(tilt);
+                            outR.setData(roll);
+
+                            socket.send(outP);
+                            socket.send(outT);
+                            socket.send(outR);
+                            //Log.i(TAG, "Sending Finished");
+                            break;
+                        case 1:
+                            socket.send(outS);
                     }
-                    sendData = false;
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
