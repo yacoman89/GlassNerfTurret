@@ -1,7 +1,6 @@
 package com.example.nerfturret.nerfturret;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -23,11 +22,9 @@ public class MainActivity extends Activity {
     AttitudeService mService;
     boolean mBound = false;
 
-    private String videoPath = "rtsp://192.168.1.34:8080";
+    private String videoPath = "rtsp://192.168.1.30:5554/test.sdp";
 
-    private static ProgressDialog progressDialog;
-    String videourl;
-    VideoView videoView ;
+    VideoView videoView;
 
 
     @Override
@@ -39,9 +36,6 @@ public class MainActivity extends Activity {
 
         videoView = (VideoView) findViewById(R.id.videoView);
 
-        progressDialog = ProgressDialog.show(MainActivity.this, "", "Buffering video...", true);
-        progressDialog.setCancelable(true);
-
         PlayVideo();
 
         Intent intent = new Intent(this, AttitudeService.class);
@@ -52,7 +46,7 @@ public class MainActivity extends Activity {
 
     private void PlayVideo() {
         try {
-            getWindow().setFormat(PixelFormat.TRANSLUCENT);
+            getWindow().setFormat(PixelFormat.OPAQUE);
             MediaController mediaController = new MediaController(MainActivity.this);
             mediaController.setAnchorView(videoView);
 
@@ -63,14 +57,12 @@ public class MainActivity extends Activity {
             videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
 
                 public void onPrepared(MediaPlayer mp) {
-                    progressDialog.dismiss();
                     videoView.start();
                 }
             });
         } catch (Exception e) {
-            progressDialog.dismiss();
-            System.out.println("Video Play Error :" + e.toString());
-            finish();
+            Log.i(TAG, "Video Play Error :" + e.toString());
+            //finish();
         }
     }
 

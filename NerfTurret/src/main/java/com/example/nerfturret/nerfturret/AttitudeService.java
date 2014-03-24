@@ -3,6 +3,7 @@ package com.example.nerfturret.nerfturret;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -10,6 +11,9 @@ import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+
+import com.google.android.glass.eye.EyeGesture;
+import com.google.android.glass.eye.EyeGestureManager;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -33,10 +37,64 @@ public class AttitudeService extends Service implements SensorEventListener {
     int avg=0;
     LinkedBlockingQueue<float[]> queue = new LinkedBlockingQueue<float[]>(4);
 
+    private EyeGestureManager mEyeGestureManager;
+    private EyeSender mEyeSender;
+    private EyeSender.EyeEventListener mEyeEventListener;
+
     @Override
     public void onCreate() {
         super.onCreate();
         Log.i(TAG, "onCreate");
+
+        mEyeGestureManager = EyeGestureManager.from(this);
+
+        mEyeEventListener = new EyeSender.EyeEventListener() {
+            @Override
+            public void onWink() {
+                Log.i(TAG, "Single Wink");
+            }
+
+            @Override
+            public void onDoubleBlink() {
+                Log.i(TAG, "Double Wink");
+                try {
+                    queue.put(new float[]{1});
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        mEyeSender = new EyeSender(mEyeEventListener);
+        setupReceiver();
+    }
+
+    public void setupReceiver() {
+        // Eye Events
+        mEyeGestureManager.stopDetector(EyeGesture.DOUBLE_BLINK);
+        mEyeGestureManager.stopDetector(EyeGesture.WINK);
+
+        mEyeGestureManager.enableDetectorPersistently(EyeGesture.DOUBLE_BLINK,
+                true);
+        //mEyeGestureManager.enableDetectorPersistently(EyeGesture.WINK, true);
+
+        IntentFilter eyeFilter = new IntentFilter(
+                "com.google.glass.action.EYE_GESTURE");
+        eyeFilter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
+
+        this.registerReceiver(mEyeSender, eyeFilter);
+    }
+
+    public void removeReceiver() {
+        // Eye Events
+        mEyeGestureManager.stopDetector(EyeGesture.DOUBLE_BLINK);
+        mEyeGestureManager.stopDetector(EyeGesture.WINK);
+
+        try{
+            this.unregisterReceiver(mEyeSender);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -58,6 +116,7 @@ public class AttitudeService extends Service implements SensorEventListener {
     public void onDestroy() {
         Log.i(TAG, "Service Killed");
         super.onDestroy();
+        removeReceiver();
         mSensorManager.unregisterListener(this);
         try {
             socket.close();
@@ -95,7 +154,7 @@ public class AttitudeService extends Service implements SensorEventListener {
                     pt /= avg;
                     rl /= avg;
                     try {
-                        queue.put(new float[]{az, pt, rl});
+                        queue.put(new float[]{0, az, pt, rl});
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -126,12 +185,14 @@ public class AttitudeService extends Service implements SensorEventListener {
         DatagramPacket outP = null;
         DatagramPacket outT = null;
         DatagramPacket outR = null;
+        DatagramPacket outS = null;
 
         public void run() {
             try {
-                outP = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.34"), 2001);
-                outT = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.34"), 2000);
-                outR = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.34"), 2002);
+                outP = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.30"), 2001);
+                outT = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.30"), 2000);
+                outR = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.30"), 2002);
+                outS = new DatagramPacket(new byte[] {(byte)1},1, InetAddress.getByName("192.168.1.30"), 2003);
 
                 socket = new DatagramSocket(4000);
             } catch (IOException e) {
@@ -140,21 +201,30 @@ public class AttitudeService extends Service implements SensorEventListener {
 
             while(true) {
                 try {
-                    Log.i(TAG, "Send Started");
+                    //Log.i(TAG, "Send Started");
                     float[] values = queue.take();
-                    Log.i(TAG, "Value Taken");
-                    floatToByteArray(values[0], pitch);
-                    floatToByteArray(values[1], tilt);
-                    floatToByteArray(values[2], roll);
 
-                    outP.setData(pitch);
-                    outT.setData(tilt);
-                    outR.setData(roll);
+                    int flag = (int)values[0];
 
-                    socket.send(outP);
-                    socket.send(outT);
-                    socket.send(outR);
-                    Log.i(TAG, "Sending Finished");
+                    switch (flag) {
+                        case 0:
+                            //Log.i(TAG, "Value Taken");
+                            floatToByteArray(values[1], pitch);
+                            floatToByteArray(values[2], tilt);
+                            floatToByteArray(values[3], roll);
+
+                            outP.setData(pitch);
+                            outT.setData(tilt);
+                            outR.setData(roll);
+
+                            socket.send(outP);
+                            socket.send(outT);
+                            socket.send(outR);
+                            //Log.i(TAG, "Sending Finished");
+                            break;
+                        case 1:
+                            socket.send(outS);
+                    }
 
                 } catch (IOException e) {
                     e.printStackTrace();
