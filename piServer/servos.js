@@ -304,6 +304,7 @@ process.stdin.on('data', function(d){
     }
 
     d = parseInt(d);
+    if (isNaN(d)) return;
     Servo.goTo(d, {id:_id, explicit:true});
 });
 
