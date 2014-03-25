@@ -27,6 +27,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class AttitudeService extends Service implements SensorEventListener {
 
     private static final String TAG = "AttitudeService";
+    private String host;
     private SensorManager mSensorManager;
     Sensor acc;
     Sensor mag;
@@ -100,6 +101,10 @@ public class AttitudeService extends Service implements SensorEventListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "Service Started");
+        host = intent.getExtras().getString("ip");
+        if(host == null) {
+            Log.wtf(TAG, "Host is null");
+        }
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         acc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mag = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
@@ -189,10 +194,10 @@ public class AttitudeService extends Service implements SensorEventListener {
 
         public void run() {
             try {
-                outP = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.30"), 2001);
-                outT = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.30"), 2000);
-                outR = new DatagramPacket(new byte[0], 0, InetAddress.getByName("192.168.1.30"), 2002);
-                outS = new DatagramPacket(new byte[] {(byte)1},1, InetAddress.getByName("192.168.1.30"), 2003);
+                outP = new DatagramPacket(new byte[0], 0, InetAddress.getByName(host), 2001);
+                outT = new DatagramPacket(new byte[0], 0, InetAddress.getByName(host), 2000);
+                outR = new DatagramPacket(new byte[0], 0, InetAddress.getByName(host), 2002);
+                outS = new DatagramPacket(new byte[] {(byte)1},1, InetAddress.getByName(host), 2003);
 
                 socket = new DatagramSocket(4000);
             } catch (IOException e) {

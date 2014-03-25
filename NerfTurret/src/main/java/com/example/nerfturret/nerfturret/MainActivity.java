@@ -7,25 +7,62 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.PixelFormat;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.VideoView;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketTimeoutException;
+import java.util.Collections;
+
 
 public class MainActivity extends Activity {
 
     private static final String TAG = "MainActivity";
+    private static final int AUTO_DETECT_PORT = 9999;
+    private static final int AUTO_DETECT_TIMEOUT = 5000;
     AttitudeService mService;
     boolean mBound = false;
 
 
     //private String videoPath = "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov";
-    private String videoPath = "rtsp://192.168.1.10:8888/test.mov";
+    private String videoPath = ":8888/test.mov";
+    private String host = null;
     //private String videoPath = "rtp://192.168.1.49:5004";
 
     VideoView videoView;
+
+    private class DiscoverHostAsyncTask extends AsyncTask<Integer, Void, String> {
+
+        @Override
+        protected String doInBackground(Integer... params) {
+            Log.i("MainActivity", "discovering");
+            return discoverHost(params[0], params[1]);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if(s != null) {
+                host = s;
+//                PlayVideo();
+
+                Intent intent = new Intent(MainActivity.this, AttitudeService.class);
+                intent.putExtra("ip", s);
+                startService(intent);
+                Log.i(TAG, "StartService");
+                bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+            } else {
+                finish();
+            }
+        }
+    }
 
 
     @Override
@@ -36,12 +73,55 @@ public class MainActivity extends Activity {
 
         videoView = (VideoView) findViewById(R.id.videoView);
 
-        PlayVideo();
+        new DiscoverHostAsyncTask().execute(AUTO_DETECT_PORT, AUTO_DETECT_TIMEOUT);
+    }
 
-        Intent intent = new Intent(this, AttitudeService.class);
-        startService(intent);
-        Log.i(TAG, "StartService");
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    private void broadcast (int udpPort, DatagramSocket socket) throws IOException {
+        byte[] data = {1};
+        for (NetworkInterface iface : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+            for (InetAddress address : Collections.list(iface.getInetAddresses())) {
+                // Java 1.5 doesn't support getting the subnet mask, so try the two most common.
+                byte[] ip = address.getAddress();
+                ip[3] = -1; // 255.255.255.0
+                try {
+                    socket.send(new DatagramPacket(data, data.length, InetAddress.getByAddress(ip), udpPort));
+                } catch (Exception ignored) {
+                }
+                ip[2] = -1; // 255.255.0.0
+                try {
+                    socket.send(new DatagramPacket(data, data.length, InetAddress.getByAddress(ip), udpPort));
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        Log.d("MainActivity", "Broadcasted host discovery on port: " + udpPort);
+    }
+
+
+    private String discoverHost(int udpPort, int timeout) {
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket();
+            broadcast(udpPort, socket);
+            socket.setSoTimeout(timeout);
+            DatagramPacket packet = new DatagramPacket(new byte[0], 0);
+            try {
+                socket.receive(packet);
+            } catch (SocketTimeoutException ex) {
+                Log.i("MainActivity", "Host discovery timed out.");
+                return null;
+            }
+            Log.i("MainActivity", "Discovered server: " + packet.getAddress().getHostAddress());
+            return packet.getAddress().getHostAddress();
+
+        } catch(IOException ex) {
+            Log.e("MainActivity", "Host discovery failed", ex);
+            return null;
+        } finally {
+            if(socket != null) {
+                socket.close();
+            }
+        }
     }
 
     private void PlayVideo() {
@@ -50,7 +130,9 @@ public class MainActivity extends Activity {
             //MediaController mediaController = new MediaController(MainActivity.this);
             // mediaController.setAnchorView(videoView);
 
-            Uri video = Uri.parse(videoPath);
+            String videoURI = "rtsp://" + host + videoPath;
+            Log.i("MainActivity", "Connecting to video at: " + videoURI);
+            Uri video = Uri.parse(videoURI);
             //videoView.setMediaController(mediaController);
             videoView.setVideoURI(video);
             videoView.requestFocus();
@@ -60,9 +142,7 @@ public class MainActivity extends Activity {
             //videoView.start();
             //}
             // });
-            videoLoop videoLoop = new videoLoop();
-
-            videoLoop.start();
+            videoView.start();
             Log.i(TAG, "Call Thread");
 
 
@@ -74,40 +154,7 @@ public class MainActivity extends Activity {
     }
 
 
-    public class videoLoop extends Thread {
 
-        int videoRunning = 0;
-
-        public void run() {
-            Log.i(TAG, "Thread running");
-            while(true) {
-                switch (videoRunning){
-                    case 0:
-                        videoView.start();
-                        Log.i(TAG, "video started");
-                        videoRunning = 1;
-                        /*try {
-                            wait(10000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        break;
-                    case 1:
-                        if(!videoView.isPlaying()) {
-                            Log.i(TAG, "video stopped");
-                            videoView.stopPlayback();
-                            try {
-                                wait(1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            videoRunning = 0;
-                        }*/
-                        break;
-                }
-            }
-        }
-    }
 
 
     @Override
