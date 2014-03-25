@@ -12,7 +12,7 @@
 
         <uses-library
             android:name="com.google.android.glass"
-            android:required="true"/>
+            android:required="false"/>
         <activity
             android:name="com.example.nerfturret.nerfturret.MainActivity"
             android:label="@string/app_name" >

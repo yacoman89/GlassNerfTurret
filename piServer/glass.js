@@ -37,7 +37,8 @@ var Cam = {
         offset:0, calibrate:10
     },
     shoot:{
-        id:5, min:240, max:360, center:240
+        id:5, min:240, max:360, center:240,
+        offset:0
     }
 };
 for (var i in Cam){
