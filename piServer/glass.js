@@ -67,8 +67,10 @@ for (var i in Cam){
 }
 
 Servo.on('ready', function(){
-    for (var i in Cam) 
+    for (var i in Cam) {
         Cam[i].goTo(Cam[i].center, true);
+    }
+    Servo.set({movingSpeed: 512})
 });
 
 
@@ -85,7 +87,7 @@ Socket.TIL.bind(Socket.TIL_port, function() {
 Socket.PAN.bind(Socket.PAN_port, function() {
     Socket.PAN.on('message', function(buf, rinfo){
         
-        Cam.X.goTo(  buf.readOrientation() );
+        Cam.X.goTo( 2 * buf.readOrientation() );
         
     });
     console.log('UDP PAN listening on ', Socket.PAN.address());

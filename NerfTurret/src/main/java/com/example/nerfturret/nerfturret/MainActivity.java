@@ -22,7 +22,7 @@ public class MainActivity extends Activity {
 
 
     //private String videoPath = "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov";
-    private String videoPath = "rtsp://192.168.1.46:8888/test.mov";
+    private String videoPath = "rtsp://192.168.1.10:8888/test.mov";
     //private String videoPath = "rtp://192.168.1.49:5004";
 
     VideoView videoView;
