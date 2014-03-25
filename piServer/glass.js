@@ -20,7 +20,8 @@ var Socket = {
     shoot_port: 2003+ disable,
     broadcast: udp.createSocket('udp4'),
     broadcast_port: 9999,
-    IP:'0.0.0.0'
+    IP:'0.0.0.0',
+    bindIP:'0.0.0.0'
 };
 
 var Cam = {
@@ -74,7 +75,7 @@ Servo.on('ready', function(){
 });
 
 
-Socket.TIL.bind(Socket.TIL_port, function() {
+Socket.TIL.bind(Socket.TIL_port, Socket.bindIP, function() {
     Socket.TIL.on('message', function(buf, rinfo){
         
         Cam.Y.goTo(  Cam.Y.max - buf.readOrientation() );
@@ -84,7 +85,7 @@ Socket.TIL.bind(Socket.TIL_port, function() {
 });
 
 
-Socket.PAN.bind(Socket.PAN_port, function() {
+Socket.PAN.bind(Socket.PAN_port, Socket.bindIP, function() {
     Socket.PAN.on('message', function(buf, rinfo){
         
         Cam.X.goTo( 2 * buf.readOrientation() );
@@ -93,7 +94,7 @@ Socket.PAN.bind(Socket.PAN_port, function() {
     console.log('UDP PAN listening on ', Socket.PAN.address());
 });
 
-Socket.AZI.bind(Socket.AZI_port, function() {
+Socket.AZI.bind(Socket.AZI_port, Socket.bindIP, function() {
     Socket.AZI.on('message', function(buf, rinfo){
         
         Cam.Z.goTo(  buf.readOrientation() );
@@ -103,14 +104,14 @@ Socket.AZI.bind(Socket.AZI_port, function() {
 });
 
 
-Socket.shoot.bind(Socket.shoot_port, function() {
+Socket.shoot.bind(Socket.shoot_port, Socket.bindIP, function() {
     Socket.shoot.on('message', function(buf, rinfo){
         shoot();
     });
     console.log('UDP shoot listening on ', Socket.shoot.address());
 });
 
-Socket.broadcast.bind(Socket.broadcast_port, function() {
+Socket.broadcast.bind(Socket.broadcast_port, Socket.bindIP, function() {
     Socket.broadcast.on('message', function(buf, rinfo){
         console.log('UDP MSG: ', buf.toString());
         var rbuf = new Buffer(Socket.IP);
@@ -121,6 +122,7 @@ Socket.broadcast.bind(Socket.broadcast_port, function() {
     });
     console.log('UDP broadcast listening on ', Socket.broadcast.address());
 });
+
 //Socket.broadcast.setBroadcast(1);
 
 var tstamp = new Date().getTime();
