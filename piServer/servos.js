@@ -1,8 +1,11 @@
 /*
-    Responible for controlling servos
+    Library responible for controlling servos
     
-    /usr/local/Tekkotsu/tools/dynamixel_util
-    is good
+    Do not change anything here.
+    
+    *Reading from servos is incomplete
+    
+    /usr/local/Tekkotsu/tools/dynamixel_util is good for trouble shooting / setting up
 */
 
 module.exports =
@@ -214,7 +217,7 @@ var _Servo = {
         if (pos < 0 
 	    || ( params.min && params.max && (pos < params.min || pos> params.max) )
 	    ) {
-            C.err('goal servo position out of range: '+pos);
+            C.err('servo '+params.id+' position out of range: '+pos);
             return;
         }
         this.position = ((pos/360) * 1023) | 0;
