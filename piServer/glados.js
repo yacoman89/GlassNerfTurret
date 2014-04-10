@@ -25,7 +25,7 @@ if (process.argv.indexOf('-o') != -1) {
         console.log(('Incorrect filename: '+filename).red().bold());
         process.exit();
     }
-    filename = filename.indexOf('.cvs') == -1 ? filename + '.cvs' : filename;
+    filename = filename.indexOf('.csv') == -1 ? filename + '.csv' : filename;
     console.log(('Writing csv to '+filename).yellow().bold());
     Cam.cvs = filename;
     fs.writeFileSync(Cam.cvs,(new Date())+'\n');

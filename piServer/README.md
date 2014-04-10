@@ -8,7 +8,7 @@ Run with `node glados.js`
 
 `--no-calibration` don't calibrate an offset for the received data
 
-e.g. `node glados.js --no-calibration -o logs.cvs`
+e.g. `node glados.js --no-calibration -o logs.csv`
 
 ### Testing
 
