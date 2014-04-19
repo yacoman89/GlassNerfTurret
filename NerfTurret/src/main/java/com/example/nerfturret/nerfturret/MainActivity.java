@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.PixelFormat;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -28,8 +29,53 @@ import java.util.Collections;
 
 public class MainActivity extends Activity {
 
+    private static final boolean ENABLE_VIDEO = true;
+    private static final boolean CLOSE_ON_FAILURE = false;
+
+    private interface DiscoverHostCallback {
+        public void discoverHostSuccess(String host);
+        public void discoverHostFailure();
+    }
+
+    private class DiscoverVoiceChangerCallbacks implements DiscoverHostCallback {
+
+        @Override
+        public void discoverHostSuccess(String host) {
+            voiceChangerPresent = true;
+            voiceChangerPath = host;
+            Log.d(TAG, "Voice Changer found at: " + host);
+        }
+
+        @Override
+        public void discoverHostFailure() {
+            voiceChangerPresent = false;
+        }
+    }
+
+    private class DiscoverPiCallbacks implements DiscoverHostCallback {
+
+        @Override
+        public void discoverHostSuccess(String host) {
+            MainActivity.this.host = host;
+
+            if(ENABLE_VIDEO) PlayVideo();
+
+            Intent intent = new Intent(MainActivity.this, AttitudeService.class);
+            intent.putExtra("ip", host);
+            startService(intent);
+            Log.i(TAG, "StartService");
+            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        }
+
+        @Override
+        public void discoverHostFailure() {
+            if(CLOSE_ON_FAILURE) finish();
+        }
+    }
+
     private static final String TAG = "MainActivity";
     private static final int AUTO_DETECT_PORT = 9999;
+    private static final int AUTO_DETECT_VOICE_PORT = 9998;
     private static final int AUTO_DETECT_TIMEOUT = 5000;
     AttitudeService mService;
     boolean mBound = false;
@@ -40,9 +86,17 @@ public class MainActivity extends Activity {
     private String host = null;
     //private String videoPath = "rtp://192.168.1.49:5004";
 
+    private boolean voiceChangerPresent = false;
+    private String voiceChangerPath = "";
+
     VideoView videoView;
 
     private class DiscoverHostAsyncTask extends AsyncTask<Integer, Void, String> {
+        private DiscoverHostCallback callbacks;
+
+        public DiscoverHostAsyncTask(DiscoverHostCallback callback) {
+            this.callbacks = callback;
+        }
 
         @Override
         protected String doInBackground(Integer... params) {
@@ -53,16 +107,9 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(String s) {
             if(s != null) {
-                host = s;
-//                PlayVideo();
-
-                Intent intent = new Intent(MainActivity.this, AttitudeService.class);
-                intent.putExtra("ip", s);
-                startService(intent);
-                Log.i(TAG, "StartService");
-                bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+                this.callbacks.discoverHostSuccess(s);
             } else {
-//                finish();
+                this.callbacks.discoverHostFailure();
             }
         }
     }
@@ -76,7 +123,8 @@ public class MainActivity extends Activity {
 
         videoView = (VideoView) findViewById(R.id.videoView);
 
-        new DiscoverHostAsyncTask().execute(AUTO_DETECT_PORT, AUTO_DETECT_TIMEOUT);
+        new DiscoverHostAsyncTask(new DiscoverPiCallbacks()).execute(AUTO_DETECT_PORT, AUTO_DETECT_TIMEOUT);
+        new DiscoverHostAsyncTask(new DiscoverVoiceChangerCallbacks()).execute(AUTO_DETECT_VOICE_PORT, AUTO_DETECT_TIMEOUT);
     }
 
     private void broadcast (int udpPort, DatagramSocket socket) throws IOException {
@@ -219,7 +267,14 @@ public class MainActivity extends Activity {
                     ArrayList<String> text = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 
-                    SpeechToTextSocket speechToTextSocket = new SpeechToTextSocket();
+                    SpeechToTextSocket speechToTextSocket = new SpeechToTextSocket(voiceChangerPresent, voiceChangerPath);
+
+                    String command = null;
+                    for(int i=0; i<text.size(); i++)
+                        command = text.get(i);
+
+                    if(command.startsWith("close"))
+                        finish();
 
                     speechToTextSocket.execute(text);
                 }
