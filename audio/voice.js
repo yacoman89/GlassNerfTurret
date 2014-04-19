@@ -13,7 +13,7 @@ var Voice = {
 
 	text:'',
 	delimiter:'\n',
-	filename:'NaF.wav',		//??
+	filename:'C:\Users\Yaco\Desktop\NaF.wav',		//??
 
 	_states: ['open', 'closed'],
 	state: 'open',
