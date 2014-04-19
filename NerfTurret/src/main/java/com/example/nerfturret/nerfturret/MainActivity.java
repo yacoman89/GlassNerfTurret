@@ -10,7 +10,9 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.speech.RecognizerIntent;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.WindowManager;
 import android.widget.VideoView;
 
@@ -20,6 +22,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.Collections;
 
 
@@ -30,7 +33,7 @@ public class MainActivity extends Activity {
     private static final int AUTO_DETECT_TIMEOUT = 5000;
     AttitudeService mService;
     boolean mBound = false;
-
+    protected static final int RESULT_SPEECH = 1;
 
     //private String videoPath = "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov";
     private String videoPath = ":8888/test.mov";
@@ -59,7 +62,7 @@ public class MainActivity extends Activity {
                 Log.i(TAG, "StartService");
                 bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
             } else {
-                finish();
+//                finish();
             }
         }
     }
@@ -153,10 +156,6 @@ public class MainActivity extends Activity {
         }
     }
 
-
-
-
-
     @Override
     protected void onStart()
     {
@@ -188,6 +187,44 @@ public class MainActivity extends Activity {
             mBound = false;
             Intent intent = new Intent(this, AttitudeService.class);
             stopService(intent);
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keycode, KeyEvent event) {
+        if (keycode == KeyEvent.KEYCODE_DPAD_CENTER) {
+
+            Intent intent = new Intent(
+                    RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "en-US");
+
+            startActivityForResult(intent, RESULT_SPEECH);
+
+            // user tapped touchpad, do something
+            return true;
+        }
+        super.onKeyDown(keycode, event);
+        return false;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case RESULT_SPEECH: {
+                if (resultCode == RESULT_OK && null != data) {
+
+                    ArrayList<String> text = data
+                            .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+
+                    SpeechToTextSocket speechToTextSocket = new SpeechToTextSocket();
+
+                    speechToTextSocket.execute(text);
+                }
+                break;
+            }
         }
     }
 
