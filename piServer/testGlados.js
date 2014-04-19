@@ -3,7 +3,7 @@
     
     run glados.js server without configuration
     
-    Do not change this file.  see config.js
+    Do not  change this file.  see config.js
 */
 
 require('./config');
@@ -42,13 +42,17 @@ setInterval(function(){
             }else if (target.num <= target.servo.min) {
                 target.func = inc;
             }
+            
             target.func();
             console.log(target.num);
             var buf = new Buffer(4);
             buf.setGladosFormat(target.num);
-            server.send(buf, 0, buf.length, Socket.channels[i].port, Cam.settings.testingIP, function(){
-                console.log('sent msg: ', buf);     
-            });
+            server.send(buf,
+                        0,
+                        buf.length,
+                        Socket.channels[i].port,
+                        Cam.settings.testingIP,
+                        function(){ /**/ });
         })();
     }
 },Cam.settings.testingDelay);
