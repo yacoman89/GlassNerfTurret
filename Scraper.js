@@ -1,6 +1,5 @@
 var http = require("http");
 var spawn = require('child_process').spawn;
-var cheerio = require("cheerio");
 var fs = require('fs');
 var url = "";
 

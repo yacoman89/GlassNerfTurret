@@ -1,0 +1,49 @@
+#!/bin/bash
+
+apt-get update
+apt-get -y remove brltty openjdk-6-*
+apt-get -y install cvs build-essential openjdk-7-jdk
+apt-get -y install sox libasound2-dev libjpeg-dev libpng12-dev libreadline-dev libxml2-dev libncurses5-dev
+
+cd /tmp
+if [ `uname -m` == "x86_64" ]; then
+  wget http://download.java.net/media/java3d/builds/release/1.5.2/j3d-1_5_2-linux-amd64.zip
+else
+  wget  http://download.java.net/media/java3d/builds/release/1.5.2/j3d-1_5_2-linux-i586.zip
+fi
+unzip j3d*zip
+rm -f j3d*zip
+cd j3d*
+unzip j3d-jre.zip
+sudo cp -p lib/*/libj3dcore-ogl.so /usr/lib
+
+perl -MCPAN -e "install Parse::RecDescent"
+
+apt-get -y install ruby rubygems
+gem install plist treetop
+
+cd
+wget http://Chiara-Robot.org/download/dot-profile
+mv dot-profile .profile
+wget http://Chiara-Robot.org/download/dot-bashrc
+mv dot-bashrc .bashrc
+wget http://Chiara-Robot.org/download/dot-cvsrc
+mv dot-cvsrc .cvsrc
+cat /dev/null >~/.cvspass
+source .profile
+source .bashrc
+
+cd /usr/local
+cvs -d :pserver:anonymous@cvs.tekkotsu.org:/cvs co -P Tekkotsu
+
+cd /usr/local/Tekkotsu/project
+make    # use 'make -j4' if running on a fast workstation
+
+
+
+
+cd /usr/local/Tekkotsu/tools/dynamixel_util
+make    
+
+# add to path
+echo "PATH=\"$PATH:/usr/local/Tekkotsu/tools/dynamixel_util\"" >> ~/.bashrc
