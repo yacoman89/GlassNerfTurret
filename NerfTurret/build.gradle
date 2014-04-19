@@ -1,7 +1,7 @@
 apply plugin: 'android'
 
 android {
-    compileSdkVersion 15
+    compileSdkVersion "Google Inc.:Glass Development Kit Sneak Peek:15"
     buildToolsVersion "19.0.0"
 
     defaultConfig {

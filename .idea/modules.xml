@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/GlassNerfTurret.iml" filepath="$PROJECT_DIR$/GlassNerfTurret.iml" />
       <module fileurl="file://$PROJECT_DIR$/NerfTurret.iml" filepath="$PROJECT_DIR$/NerfTurret.iml" />
-      <module fileurl="file://$PROJECT_DIR$/NerfTurret/NerfTurret-NerfTurret.iml" filepath="$PROJECT_DIR$/NerfTurret/NerfTurret-NerfTurret.iml" />
     </modules>
   </component>
 </project>
