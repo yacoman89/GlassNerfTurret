@@ -1,0 +1,95 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/bin/node', '/usr/bin/npm', 'install', 'speaker' ]
+2 info using npm@1.4.3
+3 info using node@v0.10.26
+4 verbose node symlink /usr/bin/node
+5 verbose cache add [ 'speaker', null ]
+6 verbose cache add name=undefined spec="speaker" args=["speaker",null]
+7 verbose parsed url { protocol: null,
+7 verbose parsed url   slashes: null,
+7 verbose parsed url   auth: null,
+7 verbose parsed url   host: null,
+7 verbose parsed url   port: null,
+7 verbose parsed url   hostname: null,
+7 verbose parsed url   hash: null,
+7 verbose parsed url   search: null,
+7 verbose parsed url   query: null,
+7 verbose parsed url   pathname: 'speaker',
+7 verbose parsed url   path: 'speaker',
+7 verbose parsed url   href: 'speaker' }
+8 silly lockFile 9ee31843-speaker speaker
+9 verbose lock speaker /home/conor/.npm/9ee31843-speaker.lock
+10 silly lockFile 9ee31843-speaker speaker
+11 silly lockFile 9ee31843-speaker speaker
+12 verbose addNamed [ 'speaker', '' ]
+13 verbose addNamed [ null, '*' ]
+14 silly lockFile 38e0e7f2-speaker speaker@
+15 verbose lock speaker@ /home/conor/.npm/38e0e7f2-speaker.lock
+16 silly addNameRange { name: 'speaker', range: '*', hasData: false }
+17 verbose url raw speaker
+18 verbose url resolving [ 'https://registry.npmjs.org/', './speaker' ]
+19 verbose url resolved https://registry.npmjs.org/speaker
+20 info trying registry request attempt 1 at 02:30:13
+21 verbose etag "A9M3257JNZDPTSPSB4VW2KRHM"
+22 http GET https://registry.npmjs.org/speaker
+23 http 200 https://registry.npmjs.org/speaker
+24 silly registry.get cb [ 200,
+24 silly registry.get   { date: 'Sun, 20 Apr 2014 06:30:13 GMT',
+24 silly registry.get     server: 'CouchDB/1.5.0 (Erlang OTP/R16B)',
+24 silly registry.get     etag: '"3JF7LS7HO77TCPS6G2NX1CWE1"',
+24 silly registry.get     'content-type': 'application/json',
+24 silly registry.get     'cache-control': 'max-age=1',
+24 silly registry.get     'content-length': '16219',
+24 silly registry.get     'accept-ranges': 'bytes',
+24 silly registry.get     via: '1.1 varnish',
+24 silly registry.get     age: '1643',
+24 silly registry.get     'x-served-by': 'cache-v41-ASH',
+24 silly registry.get     'x-cache': 'MISS',
+24 silly registry.get     'x-cache-hits': '0',
+24 silly registry.get     'x-timer': 'S1397975413.332019091,VS0,VE7',
+24 silly registry.get     vary: 'Accept',
+24 silly registry.get     'keep-alive': 'timeout=10, max=50',
+24 silly registry.get     connection: 'Keep-Alive' } ]
+25 silly addNameRange number 2 { name: 'speaker', range: '*', hasData: true }
+26 silly addNameRange versions [ 'speaker',
+26 silly addNameRange   [ '0.0.1',
+26 silly addNameRange     '0.0.2',
+26 silly addNameRange     '0.0.3',
+26 silly addNameRange     '0.0.4',
+26 silly addNameRange     '0.0.5',
+26 silly addNameRange     '0.0.6',
+26 silly addNameRange     '0.0.7',
+26 silly addNameRange     '0.0.8',
+26 silly addNameRange     '0.0.9',
+26 silly addNameRange     '0.0.10',
+26 silly addNameRange     '0.1.0' ] ]
+27 verbose addNamed [ 'speaker', '0.1.0' ]
+28 verbose addNamed [ '0.1.0', '0.1.0' ]
+29 silly lockFile 234c2182-speaker-0-1-0 speaker@0.1.0
+30 verbose lock speaker@0.1.0 /home/conor/.npm/234c2182-speaker-0-1-0.lock
+31 silly lockFile a6879d2e-js-org-speaker-speaker-0-1-0-tgz https://registry.npmjs.org/speaker/-/speaker-0.1.0.tgz
+32 verbose lock https://registry.npmjs.org/speaker/-/speaker-0.1.0.tgz /home/conor/.npm/a6879d2e-js-org-speaker-speaker-0-1-0-tgz.lock
+33 verbose addRemoteTarball [ 'https://registry.npmjs.org/speaker/-/speaker-0.1.0.tgz',
+33 verbose addRemoteTarball   '4bb6058e0e9ca87a1abc95d79f3e5fab366dea80' ]
+34 silly lockFile a6879d2e-js-org-speaker-speaker-0-1-0-tgz https://registry.npmjs.org/speaker/-/speaker-0.1.0.tgz
+35 silly lockFile a6879d2e-js-org-speaker-speaker-0-1-0-tgz https://registry.npmjs.org/speaker/-/speaker-0.1.0.tgz
+36 silly lockFile 234c2182-speaker-0-1-0 speaker@0.1.0
+37 silly lockFile 234c2182-speaker-0-1-0 speaker@0.1.0
+38 silly lockFile 38e0e7f2-speaker speaker@
+39 silly lockFile 38e0e7f2-speaker speaker@
+40 error Error: EACCES, mkdir '/home/conor/tmp/npm-6033-IcepnIgp'
+40 error  { [Error: EACCES, mkdir '/home/conor/tmp/npm-6033-IcepnIgp']
+40 error   errno: 3,
+40 error   code: 'EACCES',
+40 error   path: '/home/conor/tmp/npm-6033-IcepnIgp' }
+41 error Please try running this command again as root/Administrator.
+42 error System Linux 3.11.0-19-generic
+43 error command "/usr/bin/node" "/usr/bin/npm" "install" "speaker"
+44 error cwd /home/conor/apps/glassServos/audio
+45 error node -v v0.10.26
+46 error npm -v 1.4.3
+47 error path /home/conor/tmp/npm-6033-IcepnIgp
+48 error code EACCES
+49 error errno 3
+50 error stack Error: EACCES, mkdir '/home/conor/tmp/npm-6033-IcepnIgp'
+51 verbose exit [ 3, true ]

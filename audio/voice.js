@@ -38,7 +38,11 @@ var Voice = {
 			if ( self.text.indexOf(self.delimiter) != -1 ){
 				console.log('received string! : ', self.text);
 				var enText = self.text.replace(/\s/g, "+");
-				WAV.download(enText, self.returnFile, self.filepath+self.filename());
+				WAV.download(enText, function(filename){
+				
+					socket.write(filename);
+	
+				}, self.filepath+self.filename());
 				self.state = 'closed';
 			}
 		});
