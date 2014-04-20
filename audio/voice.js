@@ -13,8 +13,8 @@ var Voice = {
 
 	text:'',
 	delimiter:'\n',
-	filename:'C:\Users\Yaco\Desktop\NaF.wav',		//??
-
+	filename: function() { return ( 'aud'+new Date().getTime()+'.wav'); },		//??
+	filepath:'C:\\Users\\Yaco\\Desktop\\',
 	_states: ['open', 'closed'],
 	state: 'open',
 
@@ -23,18 +23,22 @@ var Voice = {
 		Build A string if state is open.
 	*/
 	serverHandler: function( socket ){
-		var self = this;
+	
 		socket.on('data', function(buf){
+			var self = Voice;
 			/* only accept strings when ready */
-			if (self.state != 'open') return;
-
+			if (self.state != 'open'){
+				console.log('rejecting string because state is closed');
+				 return;
+			}
+			
 			console.log('server rx: ', buf);
 			self.text += buf.toString();
 			/* check if end of string */
 			if ( self.text.indexOf(self.delimiter) != -1 ){
 				console.log('received string! : ', self.text);
 				var enText = self.text.replace(/\s/g, "+");
-				WAV.download(enText, self.returnFile, self.filename);
+				WAV.download(enText, self.returnFile, self.filepath+self.filename());
 				self.state = 'closed';
 			}
 		});
@@ -44,8 +48,8 @@ var Voice = {
 	*/	
 	resetHandler: function(socket){
 		
-		var self = this;
 		socket.on('data', function(buf){
+			var self = Voice;
 			console.log('resetting state! : ', buf.toString());
 			self.state = 'open';
 		});
@@ -58,7 +62,9 @@ var Voice = {
 		var messanger = net.connect(this.targetPort, this.targetIP, function(){
 			messanger.write(filename);
 		});		
-		
+		messanger.on('error', function(){
+			console.log('filename was failed to return');
+		});		
 	}
 };
 /* set up servers */
@@ -72,12 +78,15 @@ resetServer.listen(Voice.resetPort, function() { console.log('reset listening se
 var _cmd = 'python '+(__dirname + '/streamSoundCard.py'); console.log('cmd: ', _cmd);
 T(_cmd);
 
+if (process.argv.indexOf('-L') != -1) Voice.filepath = '';
+
 /* testing */
 //WAV.download('oh i want my baby back baby back baby back baby back baby back baby back baby back baby back baby back baby back baby back baby back baby back',
 //Voice.returnFile,
 //'babyback.wav'
 //);
 //WAV.download('hip dip dah', Voice.returnFile);
+
 
 
 

@@ -10,10 +10,11 @@ var fs = require('fs');
 
 var _download = function(url, filename, callback) {
   var started = false;
- 
+  console.log('starting download'); 
   http.get(url, function(res) {
     var data = "";
     res.on('data', function (chunk) {
+	console.log('writting to file');
     	if ( started === false){
     		fs.writeFile(filename , chunk);
     		started = true;
@@ -37,7 +38,7 @@ var _getWAV = function(text, cb, fn){
 	curl -A " Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.116 Safari/537.36"-d "voice=crystal&txt=Overwriting+this+disclaimer+and+using+this+demo+confirms+agreement+with+the+policies+and+restrictions+described+below.&downloadButton=DOWNLOAD" -e " http://www2.research.att.com/~ttsweb/tts/demo.php" http://204.178.9.51/tts/cgi-bin/nph-nvttsdemo
 
 */
-
+	console.log('sending curl post request');
 	//child_process.spawn(command, [args], [options])
 	ls = spawn("curl", 
 		["-A",
@@ -60,7 +61,7 @@ var _getWAV = function(text, cb, fn){
 		var res = data.slice(dat1,dat2);
 		url = "http://204.178.9.51"+res;
   		// console.log(res);
-    		console.log(url);
+    		console.log('curl data came back and we got this url: '+url);
     		_download(url,fn,  function (data){
 			cb(fn);
 		} );
