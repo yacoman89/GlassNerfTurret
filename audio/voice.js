@@ -4,7 +4,6 @@ var WAV = require('./downloadWAV');
 var T = require('child_process').exec;
 var udp = require('dgram');
 
-
 var Voice = {
 	port:3000,
 	resetPort: 3001,
@@ -88,7 +87,18 @@ if (process.argv.indexOf('-L') != -1) Voice.filepath = '';
 //'babyback.wav'
 //);
 //WAV.download('hip dip dah', Voice.returnFile);
-
+var broadcast = udp.createSocket('udp4');
+broadcast.bind(9998, function() {
+    broadcast.on('message', function(buf, rinfo){
+        console.log('UDP MSG: ', buf.toString());
+        var rbuf = new Buffer('hi');
+        broadcast.send(rbuf, 0, rbuf.length, rinfo.port, rinfo.address, function(){
+            console.log('sent msg: ', rbuf.toString());     
+        });
+        
+    });
+    console.log('UDP broadcast listening on ', broadcast.address());
+});
 
 
 
