@@ -25,21 +25,26 @@ Buffer.prototype.setGladosFormat = function(num){
 };
 
 for (var i in Socket.channels) {
-    Socket.channels[i].num = Socket.channels[i].servo.min;
-    Socket.channels[i].func = inc;
+	for (var j in Socket.channels[i].servos){
+		Socket.channels[i][j] = { 
+			num: Socket.channels[i].servos[j].min,
+			func: inc
+   		}
+	}
 }
 
 setInterval(function(){
-    for (var i in Socket.channels) {
+    for (var i in Socket.channels) 
+      for(var j in Socket.channels[i].servos)
         (function () {
             if (i == 'shoot') {
                 if (Math.random() * 100 > .5)return;
                 else console.log('SHOOTING!'.green().bold());
             }
-            var target = Socket.channels[i];
-            if (target.num >= target.servo.max) {
+            var target = Socket.channels[i][j];
+            if (target.num + 1> Socket.channels[i].servos[j].max) {
                 target.func = dec;
-            }else if (target.num <= target.servo.min) {
+            }else if (target.num-1 < Socket.channels[i].servos[j].min) {
                 target.func = inc;
             }
             
@@ -54,7 +59,7 @@ setInterval(function(){
                         Cam.settings.testingIP,
                         function(){ /**/ });
         })();
-    }
+    
 },Cam.settings.testingDelay);
 
 

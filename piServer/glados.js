@@ -32,13 +32,13 @@ if (process.argv.indexOf('-o') != -1) {
 }
 /* Define calibration and moving functions for each servo
 */
-for (var i in Cam){
+for (var i in Cam.servos){
     if (i == 'shoot') 
         continue;
-    Cam[i]._div = Cam.settings.calibrate;
-    Cam[i]._sum = 0;
-    Cam[i].type = i;
-    Cam[i].goTo = function(num, nocalibrate){
+    Cam.servos[i]._div = Cam.settings.calibrate;
+    Cam.servos[i]._sum = 0;
+    Cam.servos[i].type = i;
+    Cam.servos[i].goTo = function(num, nocalibrate){
         
         if (this._div && !nocalibrate) {            // Calibration state
             console.log('CALIBRATING'.yellow());
@@ -56,7 +56,7 @@ for (var i in Cam){
     };
         
     // Recalibrate using old offset and calibrate or specifying new values
-    Cam[i].recalibrate = function(offset, calibrate){
+    Cam.servos[i].recalibrate = function(offset, calibrate){
         this.offset = (offset == undefined) ? this.offset : offset;
         Cam.settings.calibrate = calibrate || Cam.settings.calibrate;
         this._div = Cam.settings.calibrate;
@@ -66,26 +66,26 @@ for (var i in Cam){
 /*
     Overwrite the goTo() on the shoot servo with special shoot movement
 */
-Cam.shoot.goTo = function(){
+Cam.servos.shoot.goTo = function(){
 
-    if (new Date().getTime() - this.tstamp < Cam.shoot.debouce) {
+    if (new Date().getTime() - this.tstamp < Cam.servos.shoot.debouce) {
         return;
     }else this.tstamp = new Date().getTime();
     
     console.log('BANG! POW! PULL!'.green().bold());
-    Servo.goTo(Cam.shoot.max , Cam.shoot);
+    Servo.goTo(Cam.servos.shoot.max , Cam.servos.shoot);
     setTimeout(function(){
-        Servo.goTo(Cam.shoot.min , Cam.shoot);
-    },Cam.shoot.debouce);
+        Servo.goTo(Cam.servos.shoot.min , Cam.servos.shoot);
+    },Cam.servos.shoot.debouce);
 };
-Cam.shoot.goTo.tstamp = new Date().getTime();
+Cam.servos.shoot.goTo.tstamp = new Date().getTime();
 
 /*
     Center the servos on USB connection
 */
 Servo.on('ready', function(){
-    for (var i in Cam) 
-        Cam[i].goTo(Cam[i].center, true);
+    for (var i in Cam.servos) 
+        Cam.servos[i].goTo(Cam.servos[i].center, true);
 });
 
 /*
@@ -98,7 +98,7 @@ for (var i in Socket.channels) {
         self.socket = udp.createSocket('udp4');
         self.socket.bind(self.port, '0.0.0.0', function(){
             self.socket.on('message', function(buf, rinfo){ 
-                self.servo.goTo( buf.readOrientation() );
+                for (var j in self.servos) self.servos[j].goTo( buf.readOrientation() );
             });
             console.log('UDP '+self.type+' listening on ', self.socket.address());
         });

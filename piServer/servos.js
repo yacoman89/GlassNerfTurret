@@ -19,17 +19,21 @@ var serial;
 var Terminal = require('child_process');
 var BAUD = 1000000;
 
+var _POTENTIAL_USB_DEVICES = [
+				'usb-FTDI_FT232R_USB_UART_A901QJ43-if00-port0',
+				'usb-Prolific_Technology_Inc._USB-Serial_Controller-if00-port0',
+				'usb-FTDI_FT232R_USB_UART_A700h3F6-if00-port0',
+				'usb-FTDI_FT232R_USB_UART_A90VNHH5-if00-port0',
+				'usb-FTDI_FT232R_USB_UART_A96DLRJN-if00-port0'
+				]; 
+
 _serialport.list(function (err, ports) {
     var addr;
     //connect to port with correct ID. see `$ lspnp`
     ports.forEach(function(port) {
         C.log(port, {color:'yellow', logLevel:1});
         if (
-	    port.pnpId == 'usb-FTDI_FT232R_USB_UART_A901QJ43-if00-port0'
-	    || port.pnpId == 'usb-Prolific_Technology_Inc._USB-Serial_Controller-if00-port0' 
-	    || port.pnpId == 'usb-FTDI_FT232R_USB_UART_A700h3F6-if00-port0' 
-	    || port.pnpId == 'usb-FTDI_FT232R_USB_UART_A9QHPNNN-if00-port0' 
-	    || port.pnpId == 'usb-FTDI_FT232R_USB_UART_A90VNHH5-if00-port0' 
+		_POTENTIAL_USB_DEVICES.indexOf( port.pnpId ) != -1	
 	    )
                 addr = port.comName;
     });
@@ -312,7 +316,7 @@ process.stdin.on('data', function(d){
 });
 
 var blinkInter = 1000;
-var blink =  function(){   _Servo.blinkLED(blinkInter);   };
+var blink =  function(){   _Servo.blinkLED(blinkInter, {id:254});   };
 
 //setInterval(function(){ _Servo.readCmds = [] },250);
 setInterval( blink, blinkInter);

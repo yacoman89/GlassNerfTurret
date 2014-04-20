@@ -23,27 +23,33 @@
     
 */
 Cam = {
-    X:{
-        id: 4, min:90, max:270,center:180,
-        offset:0
-    },
-    Y:{
-        id:2, min:60, max:280, center:150,
-        offset:0
-    },
-    Z:{
-        id:3, min:0, max:160, center:70,
-        offset:0
-    },
-    shoot:{
-        id:5, min:240, max:360, center:240,
-        offset:0, debounce:250
-    },
-    settings:{
-        calibrate:10,
-        testingDelay:100,               // interval time in ms for testing
-        testingIP:'0.0.0.0'             // target server for testing
-    }
+	servos:{
+    		X:{
+        		id: 5, min:220, max:360,center:290,
+        		offset:0
+    		},
+    		Y1:{
+        		id:2, min:130, max:240, center:160,
+        		offset:0
+    		},
+    		Y2:{ 
+			id:4, min:0, max:195, center:150,
+			offset:0	
+    		},
+    		Z:{
+        		id:3, min:0, max:160, center:70,
+        		offset:0
+    		},
+    		shoot:{
+        		id:6, min:240, max:360, center:240,
+        		offset:0, debounce:250
+    		},
+	},
+    	settings:{
+        	calibrate:10,
+        	testingDelay:100,               // interval time in ms for testing
+        	testingIP:'0.0.0.0'             // target server for testing
+    	}
 };
 
 /*
@@ -59,19 +65,19 @@ Socket = {
     channels: {
         TIL:{
             port: 2000,
-            servo:Cam.Y
+            servos:[Cam.servos.Y1, Cam.servos.Y2]
         },
         PAN:{
             port: 2001,
-            servo:Cam.X
+            servos:[Cam.servos.X]
         },
         AZI:{
             port: 2002,
-            servo:Cam.Z
+            servos:[Cam.servos.Z]
         },
         shoot: {
             port: 2003,
-            servo:Cam.shoot
+            servos:[Cam.servos.shoot]
         }
     },
     broadcast_port: 9999,
