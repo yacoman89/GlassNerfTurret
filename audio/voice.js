@@ -8,7 +8,7 @@ var Voice = {
 	port:3000,
 	resetPort: 3001,
 
-	targetIP:'192.168.2.10',	//??
+	targetIP:'172.16.0.173',	//??
 	targetPort:4000,		//??
 
 	text:'',
@@ -29,20 +29,16 @@ var Voice = {
 			/* only accept strings when ready */
 			if (self.state != 'open'){
 				console.log('rejecting string because state is closed');
+				//if (buf.toString().indexOf('done'))
 				 return;
 			}
-			
 			console.log('server rx: ', buf);
 			self.text += buf.toString();
 			/* check if end of string */
 			if ( self.text.indexOf(self.delimiter) != -1 ){
 				console.log('received string! : ', self.text);
 				var enText = self.text.replace(/\s/g, "+");
-				WAV.download(enText, function(filename){
-				
-					socket.write(filename);
-	
-				}, self.filepath+self.filename());
+				WAV.download(enText, self.returnFile, self.filepath+self.filename());
 				self.state = 'closed';
 			}
 		});
@@ -50,14 +46,14 @@ var Voice = {
 	/*
 		Send something here to indicate ready to send string again
 	*/	
-	resetHandler: function(socket){
+	/*resetHandler: function(socket){
 		
 		socket.on('data', function(buf){
 			var self = Voice;
 			console.log('resetting state! : ', buf.toString());
 			self.state = 'open';
 		});
-	},
+	},*/
 	/*
 		Send out filename when WAV is finished
 	*/
@@ -65,7 +61,11 @@ var Voice = {
 		console.log('got file!! : ', filename);	
 		var messanger = net.connect(this.targetPort, this.targetIP, function(){
 			messanger.write(filename);
-		});		
+		});
+		messanger.on('data', function(buf){
+			if (buf.toString().indexOf('done') != -1 )
+				Voice.state = 'open';
+		});
 		messanger.on('error', function(){
 			console.log('filename was failed to return');
 		});		
@@ -73,10 +73,10 @@ var Voice = {
 };
 /* set up servers */
 var server = net.createServer( Voice.serverHandler );
-var resetServer = net.createServer( Voice.resetHandler );
+//var resetServer = net.createServer( Voice.resetHandler );
 
 server.listen(Voice.port, function() { console.log('string listening server bound on ' + Voice.port);   });
-resetServer.listen(Voice.resetPort, function() { console.log('reset listening server bound on ' + Voice.resetPort);   });
+//resetServer.listen(Voice.resetPort, function() { console.log('reset listening server bound on ' + Voice.resetPort);   });
 
 /*	Run  sound card streamer in background	*/
 var _cmd = 'python '+(__dirname + '/streamSoundCard.py'); console.log('cmd: ', _cmd);
