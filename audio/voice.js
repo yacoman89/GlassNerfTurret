@@ -4,6 +4,7 @@ var WAV = require('./downloadWAV');
 var T = require('child_process').exec;
 var udp = require('dgram');
 
+
 var Voice = {
 	port:3000,
 	resetPort: 3001,
@@ -59,22 +60,19 @@ var Voice = {
 	*/
 	returnFile: function(filename){
 		console.log('got file!! : ', filename);	
-		var messanger = net.connect(this.targetPort, this.targetIP, function(){
-			messanger.write(filename);
-		});
-		messanger.on('data', function(buf){
-			if (buf.toString().indexOf('done') != -1 )
-				Voice.state = 'open';
-		});
-		messanger.on('error', function(){
-			console.log('filename was failed to return');
-		});		
+		messanger.write(filename);
+	
 	}
 };
 /* set up servers */
 var server = net.createServer( Voice.serverHandler );
 //var resetServer = net.createServer( Voice.resetHandler );
-
+var messanger = net.connect(Voice.targetPort, Voice.targetIP, function(){
+	
+});
+messanger.on('error', function(){
+	console.log('filename was failed to return');
+});	
 server.listen(Voice.port, function() { console.log('string listening server bound on ' + Voice.port);   });
 //resetServer.listen(Voice.resetPort, function() { console.log('reset listening server bound on ' + Voice.resetPort);   });
 
