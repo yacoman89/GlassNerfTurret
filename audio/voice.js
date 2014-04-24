@@ -8,7 +8,7 @@ var Voice = {
 	port:3000,
 	resetPort: 3001,
 
-	targetIP:'0.0.0.0',	//??
+	targetIP:'127.0.0.1',	//??
 	targetPort:4000,		//??
 
 	text:'',
