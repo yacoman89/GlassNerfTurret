@@ -8,7 +8,7 @@ var Voice = {
 	port:3000,
 	resetPort: 3001,
 
-	targetIP:'172.16.0.173',	//??
+	targetIP:'0.0.0.0',	//??
 	targetPort:4000,		//??
 
 	text:'',
@@ -70,7 +70,7 @@ var messanger = net.connect(Voice.targetPort, Voice.targetIP, function(){
 	
 });
 messanger.on('error', function(){
-	console.log('filename was failed to return');
+	console.log('filename was failed to return: target python connection error.');
 });	
 server.listen(Voice.port, function() { console.log('string listening server bound on ' + Voice.port);   });
 //resetServer.listen(Voice.resetPort, function() { console.log('reset listening server bound on ' + Voice.resetPort);   });
