@@ -4,6 +4,8 @@ package com.example.nerfturret.nerfturret;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -20,7 +22,7 @@ public class SpeechToTextSocket extends AsyncTask<ArrayList<String>,Void,Void> {
     DataInputStream dataInputStream;
     DataOutputStream dataOutputStream;
     public static final String TAG = "Socket for voice";
-    public static final int VOICE_CHANGER_PORT = 6789;
+    public static final int VOICE_CHANGER_PORT = 3000;
 
     private String host;
     private boolean serverPresent;
@@ -51,6 +53,8 @@ public class SpeechToTextSocket extends AsyncTask<ArrayList<String>,Void,Void> {
 
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            IOUtils.closeQuietly(socket);
         }
 
 
