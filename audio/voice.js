@@ -32,7 +32,7 @@ var Voice = {
 				//if (buf.toString().indexOf('done'))
 				 return;
 			}
-			console.log('server rx: ', buf);
+			console.log('server rx: ', buf.toString());
 			self.text += buf.toString();
 			/* check if end of string */
 			if ( self.text.indexOf(self.delimiter) != -1 ){
