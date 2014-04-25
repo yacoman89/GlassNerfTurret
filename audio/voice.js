@@ -73,8 +73,8 @@ var messanger = net.connect(Voice.targetPort, Voice.targetIP, function(){
 	
 });
 
-messanger.on('data', function(buff){
-	if (buf.toString().indexOf('done') != -1){
+messanger.on('data', function(buf){
+	if (buf.toString().toLowerCase().indexOf('done') != -1){
 		Voice.state = 'open';
 		console.log('stated opened: now listening for another string.');
 	}
