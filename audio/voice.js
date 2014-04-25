@@ -15,6 +15,7 @@ var Voice = {
 	delimiter:'\n',
 	filename: function() { return ( 'AUD'+((Math.random() * 999)|0)+'.wav'); },		//??
 	filepath:'C:\\Users\\Yaco\\Desktop\\',
+	absolutePath:'',
 	relativePath:'',
 	_states: ['open', 'closed'],
 	state: 'open',
@@ -40,6 +41,7 @@ var Voice = {
 				self.text = 'GLaDOS. ' + self.text;
 				console.log('received string! : ', self.text);
 				var enText = self.text.replace(/\s/g, "+");
+				self.text = '';
 				self.relativePath = self.filename();
 				WAV.download(enText, self.returnFile, self.filepath+self.relativePath);
 				self.state = 'closed';
