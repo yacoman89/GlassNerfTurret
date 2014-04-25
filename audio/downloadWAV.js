@@ -13,19 +13,21 @@ var _download = function(url, filename, callback) {
   console.log('starting download'); 
   http.get(url, function(res) {
     var data = "";
+    var prog = '';
     res.on('data', function (chunk) {
-	console.log('writting to file');
+	prog = prog+'X';
+	console.log(prog+'\r');
     	if ( started === false){
     		fs.writeFile(filename , chunk);
     		started = true;
     	}
     	else{
     		fs.appendFile(filename, chunk);
-    	}
-      
+    	}    
     });
     res.on("end", function() {
       callback(data);
+	console.log('\n');
     });
   }).on("error", function() {
     callback(null);

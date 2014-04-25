@@ -13,7 +13,7 @@ var Voice = {
 
 	text:'',
 	delimiter:'\n',
-	filename: function() { return ( 'aud'+new Date().getTime()+'.wav'); },		//??
+	filename: function() { return ( 'AUD'+(Math.random() * 999)+'.wav'); },		//??
 	filepath:'C:\\Users\\Yaco\\Desktop\\',
 	_states: ['open', 'closed'],
 	state: 'open',
@@ -36,6 +36,7 @@ var Voice = {
 			self.text += buf.toString();
 			/* check if end of string */
 			if ( self.text.indexOf(self.delimiter) != -1 ){
+				self.text = 'GLaDOS. ' + self.text;
 				console.log('received string! : ', self.text);
 				var enText = self.text.replace(/\s/g, "+");
 				WAV.download(enText, self.returnFile, self.filepath+self.filename());
