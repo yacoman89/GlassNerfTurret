@@ -62,7 +62,7 @@ var Voice = {
 	*/
 	returnFile: function(filename){
 		console.log('got file!! : ', Voice.relativePath);	
-		messanger.write(Voice.relativePath);
+		messanger.write(Voice.relativePath+'\n');
 	
 	}
 };

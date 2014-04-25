@@ -16,7 +16,7 @@ var _download = function(url, filename, callback) {
     var prog = '';
     res.on('data', function (chunk) {
 	prog = prog+'X';
-	process.stdout.write(prog+'\r');
+	process.stdout.write('\r'+prog);
     	if ( started === false){
     		fs.writeFile(filename , chunk);
     		started = true;
@@ -27,7 +27,7 @@ var _download = function(url, filename, callback) {
     });
     res.on("end", function() {
       callback(data);
-	console.log('\n');
+	// console.log('\n');
     });
   }).on("error", function() {
     callback(null);
