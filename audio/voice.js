@@ -13,8 +13,9 @@ var Voice = {
 
 	text:'',
 	delimiter:'\n',
-	filename: function() { return ( 'AUD'+(Math.random() * 999)+'.wav'); },		//??
+	filename: function() { return ( 'AUD'+((Math.random() * 999)|0)+'.wav'); },		//??
 	filepath:'C:\\Users\\Yaco\\Desktop\\',
+	relativePath:'',
 	_states: ['open', 'closed'],
 	state: 'open',
 
@@ -39,7 +40,8 @@ var Voice = {
 				self.text = 'GLaDOS. ' + self.text;
 				console.log('received string! : ', self.text);
 				var enText = self.text.replace(/\s/g, "+");
-				WAV.download(enText, self.returnFile, self.filepath+self.filename());
+				self.relativePath = self.filename();
+				WAV.download(enText, self.returnFile, self.filepath+self.relativePath);
 				self.state = 'closed';
 			}
 		});
@@ -59,8 +61,8 @@ var Voice = {
 		Send out filename when WAV is finished
 	*/
 	returnFile: function(filename){
-		console.log('got file!! : ', filename);	
-		messanger.write(filename);
+		console.log('got file!! : ', Voice.relativePath);	
+		messanger.write(Voice.relativePath);
 	
 	}
 };
