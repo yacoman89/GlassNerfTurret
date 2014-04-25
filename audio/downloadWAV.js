@@ -11,10 +11,12 @@ var fs = require('fs');
 var _download = function(url, filename, callback) {
   var started = false;
   console.log('starting download'); 
+  var file = fs.createWriteStream(filename);
   http.get(url, function(res) {
     var data = "";
     var prog = '';
-    res.on('data', function (chunk) {
+    res.pipe(file);
+    /*res.on('data', function (chunk) {
 	prog = prog+'X';
 	process.stdout.write(prog+'\r');
     	if ( started === false){
@@ -24,10 +26,11 @@ var _download = function(url, filename, callback) {
     	else{
     		fs.appendFile(filename, chunk);
     	}    
-    });
+    });*/
+
     res.on("end", function() {
       callback(data);
-	// console.log('\n');
+	 console.log('DONE DOWNLOADING!');
     });
   }).on("error", function() {
     callback(null);
@@ -35,6 +38,8 @@ var _download = function(url, filename, callback) {
 };
 
 var _getWAV = function(text, cb, fn){
+	text = text.replace(/\s/g, "+");
+	cb = cb || function(){};
 	fn = fn || 'NaF.wav';		//default value
 /*
 	curl -A " Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.116 Safari/537.36"-d "voice=crystal&txt=Overwriting+this+disclaimer+and+using+this+demo+confirms+agreement+with+the+policies+and+restrictions+described+below.&downloadButton=DOWNLOAD" -e " http://www2.research.att.com/~ttsweb/tts/demo.php" http://204.178.9.51/tts/cgi-bin/nph-nvttsdemo
@@ -69,6 +74,9 @@ var _getWAV = function(text, cb, fn){
 		} );
 	});
 }
+
+if (process.argv.indexOf('test') != -1)
+	_getWAV('this is a test.  a really long test.  Do you know your ABC\'s?  A B C D E F G X Y Z.  Ha Ha.  I skipped a few.', function(){console.log('done')}, 'wow.wav');
 
 return { download: _getWAV };
 

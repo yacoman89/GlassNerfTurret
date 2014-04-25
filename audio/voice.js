@@ -40,10 +40,11 @@ var Voice = {
 			if ( self.text.indexOf(self.delimiter) != -1 ){
 				self.text = 'GLaDOS. ' + self.text;
 				console.log('received string! : ', self.text);
-				var enText = self.text.replace(/\s/g, "+");
-				self.text = '';
+				//var enText = self.text.replace(/\s/g, "+");
+				//self.text = '';
 				self.relativePath = self.filename();
-				WAV.download(enText, self.returnFile, self.filepath+self.relativePath);
+				WAV.download(self.text, self.returnFile, self.filepath+self.relativePath);
+				self.text = '';
 				self.state = 'closed';
 			}
 		});
@@ -96,7 +97,7 @@ if (process.argv.indexOf('-L') != -1) Voice.filepath = '';
 
 /* testing */
 //WAV.download('oh i want my baby back baby back baby back baby back baby back baby back baby back baby back baby back baby back baby back baby back baby back',
-//Voice.returnFile,
+//function(){console.log('done');},
 //'babyback.wav'
 //);
 //WAV.download('hip dip dah', Voice.returnFile);
