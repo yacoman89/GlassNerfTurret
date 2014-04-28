@@ -1,6 +1,5 @@
 package com.example.nerfturret.nerfturret;
 
-
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -13,9 +12,6 @@ import java.lang.reflect.Array;
 import java.net.Socket;
 import java.util.ArrayList;
 
-/**
- * Created by Yaco on 4/19/2014.
- */
 public class SpeechToTextSocket extends AsyncTask<ArrayList<String>,Void,Void> {
 
     Socket socket;
@@ -48,7 +44,7 @@ public class SpeechToTextSocket extends AsyncTask<ArrayList<String>,Void,Void> {
                 text = params[0].get(i);
 
                 Log.i(TAG, text);
-                if(serverPresent) dataOutputStream.writeBytes(text);
+                if(serverPresent) dataOutputStream.writeBytes(text + '\n');
             }
 
         } catch (IOException e) {
