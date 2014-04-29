@@ -82,7 +82,7 @@ public class MainActivity extends Activity {
     protected static final int RESULT_SPEECH = 1;
 
     //private String videoPath = "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov";
-    private String videoPath = ":8888/test.mov";
+    private String videoPath = ":8888";
     private String host = null;
     //private String videoPath = "rtp://192.168.1.49:5004";
 

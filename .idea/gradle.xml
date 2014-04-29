@@ -8,8 +8,8 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="C:\Users\Yaco\AmplabProjects\GlassNerfTurret" />
-            <option value="C:\Users\Yaco\AmplabProjects\GlassNerfTurret\NerfTurret" />
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/NerfTurret" />
           </set>
         </option>
       </GradleProjectSettings>
