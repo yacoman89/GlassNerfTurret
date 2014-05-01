@@ -48,9 +48,15 @@ for (var i in Cam.servos){
                 this.offset = (this._sum / Cam.settings.calibrate)|0;
             }
         }else{                                      // Shoot state
-            Servo.goTo((num+this.offset) , this);
+            var pos = num + this.offset;
+
+	    if (this.invert) 
+		pos = this.max - pos;
+
+	    Servo.goTo((pos) , this);
+		
             if (Cam.cvs) {
-                fs.appendFileSync(Cam.cvs, this.type+','+(num+this.offset)+'\n');
+                fs.appendFileSync(Cam.cvs, this.type+','+(pos)+'\n');
             }
         }
     };

@@ -7,13 +7,15 @@
 /*
     Servo attributes.
     
-    id - the ID of the dynamixel
+    'id' - the ID of the dynamixel
     
-    Set min/max to limits for servos.  total range is 0-360
+    Set 'min'/'max' to limits for servos.  total range is 0-360
     
-    set center to be starting point and focus of calibration
+    set 'center' to be starting point and focus of calibration
     
-    Offset will be calculated dynamically during calibration.
+    set 'invert' to true to switch direction of servo
+
+    'offset' will be calculated dynamically during calibration.
     
     Set settings.calibrate to amount of points
     to sample during calibration
@@ -26,19 +28,19 @@ Cam = {
 	servos:{
     		X:{
         		id: 5, min:220, max:360,center:290,
-        		offset:0
+        		offset:0, invert:false
     		},
     		Y1:{
         		id:2, min:130, max:240, center:160,
-        		offset:0
+        		offset:0, invert: true
     		},
     		Y2:{ 
 			id:4, min:0, max:195, center:150,
-			offset:0	
+			offset:0, invert: true
     		},
     		Z:{
         		id:3, min:0, max:160, center:70,
-        		offset:0
+        		offset:0, invert: false
     		},
     		shoot:{
         		id:6, min:240, max:360, center:240,
